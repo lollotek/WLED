@@ -204,6 +204,11 @@
 #ifdef USERMOD_STAIRCASE_WIPE
 #include "../usermods/stairway_wipe_basic/stairway-wipe-usermod-v2.h"
 #endif
+
+#ifdef USERMOD_PAROLOGIO
+#include "../usermods/parologio/parologio.h"
+#endif
+
 void registerUsermods()
 {
 /*
