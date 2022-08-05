@@ -1,0 +1,30 @@
+{
+  "name": "parologio-web",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --skipLibCheck && vite build && node postProcess.mjs",
+    "preview": "vite preview",
+    "eslint": "eslint  \"./src/**/*.{html,tsx,ts}\" --ignore-pattern node_modules/"
+  },
+  "dependencies": {
+    "preact": "^10.5.15",
+    "react-use-websocket": "^3.0.0"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.1.5",
+    "@types/react": "^17.0.40",
+    "@typescript-eslint/eslint-plugin": "^5.11.0",
+    "@typescript-eslint/parser": "^5.11.0",
+    "autoprefixer": "^10.4.2",
+    "eslint": "^8.9.0",
+    "eslint-config-prettier": "^8.3.0",
+    "postcss": "^8.4.6",
+    "prettier": "2.5.1",
+    "tailwindcss": "^3.0.19",
+    "typescript": "^4.5.5",
+    "vite": "^2.7.2",
+    "vite-plugin-compression": "^0.5.1",
+    "vite-plugin-singlefile": "^0.6.3"
+  }
+}
