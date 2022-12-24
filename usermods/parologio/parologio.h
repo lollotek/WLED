@@ -1,3 +1,11 @@
+
+/*
+fairytwinkle 51
+Halloween 53
+Blink Rainbow 26
+Running 15
+fade 12
+*/
 #pragma once
 
 #include "wled.h"
@@ -15,6 +23,8 @@ class Parologio : public Usermod {
       byte const pinOreArray[13] = {44, 16, 12, 22, 59, 66, 55, 50, 25, 29, 39, 33, 44};
       byte const pinMinutiArray[6] = {93, 105, 77, 88, 88, 99};
       byte const pinPalliniArray[4] = {113, 112, 111, 110};
+      byte const pinStoneBorder = 110;
+      byte const lastPinStoneBorder = 162;
       byte const pinEL = 19;
       byte const pinSonoLe = 0;
       byte const pinE = 87;
@@ -55,8 +65,8 @@ class Parologio : public Usermod {
           strip.setSegment(1, 0, 4);  // sono [le]
           strip.setSegment(2, 5, 7);  // le
         }else{
-          strip.setSegment(1, 11, 12);  // è [l']
-          strip.setSegment(2, 13, 14);  // l'
+          strip.setSegment(1, 19, 20);  // è [l']
+          strip.setSegment(2, 21, 22);  // l'
         }
 
         setSegmentWord(3, pinOreArray[hour], oreArray[hour]);
@@ -71,6 +81,7 @@ class Parologio : public Usermod {
         strip.setSegment(10 , 0, 0);
         strip.setSegment(11 , 0, 0);
 
+        Serial.printf("minute: %u minute \n", minute);
         if (minute > -1){
           if (!past) {
             if (minute >= 0){
@@ -84,31 +95,38 @@ class Parologio : public Usermod {
         if (minute == 2){
           strip.setSegment(7, pinUN, pinUN+2);
         }
-
-        for (byte j=1; j < 5; j++) {
-          if (dots >= j){
-            strip.setSegment(7+j, pinPalliniArray[j-1], pinPalliniArray[j]);
-          }else{
-            strip.setSegment(7+j, 0, 0);
+        #ifdef IS_STONE
+          strip.setSegment(8, pinStoneBorder, lastPinStoneBorder, 10, 3);
+          strip.setSegment(9, pinStoneBorder, pinStoneBorder + (13*dots), 3, 10, 10);
+        #else
+          todo switch to group like stone
+          strip.setSegment(8, pinPalliniArray[0], pinPalliniArray[1]);
+          
+          for (byte j=1; j < 5; j++) {
+            if (dots >= j){
+              strip.setSegment(7+j, pinPalliniArray[j], pinPalliniArray[j-1]);
+            }else{
+              strip.setSegment(7+j, 0, 0);
+            }
           }
-        }
+        #endif
     }
 
   public:
     void setup() {
-        // // background
-        // // strip.getSegment(0).setOption(SEG_OPTION_SELECTED, false);
-        // strip.getSegment(0).setOption(SEG_OPTION_ON, false);
-        // // strip.setBrightness(50);
+        // background
+        strip.setSegment(0 , 0, 200);
+        strip.getSegment(0).setOption(SEG_OPTION_ON, false);
+        strip.getSegment(0).setOption(SEG_OPTION_SELECTED, false);
 
-        // // other segments are text + 4 leds
-        // for (int i = 1; i <= ( 7 + 4 ); i++)
-        // {
-        //   // strip.getSegment(i).setOption(SEG_OPTION_SELECTED, false);
-        //   strip.getSegment(i).setOption(SEG_OPTION_ON, true);
-        //   // strip.setBrightness(128);
-        // }
-        // // colorUpdated(CALL_MODE_FX_CHANGED);
+        for (byte j=1; j <= 11; j++) {
+          strip.setSegment(j , 200, 201);
+          strip.getSegment(j).setOption(SEG_OPTION_SELECTED, true);
+          strip.setColor(0, RGBW32(250,50,0, 0)); // (int(200) << 16) + (int(50) << 8) + int(0)
+          strip.setColor(1, RGBW32(200,100,20, 0));
+        }
+        strip.setBrightness(128);
+        colorUpdated(CALL_MODE_FX_CHANGED);
     }
 
     void loop() {
@@ -132,13 +150,14 @@ class Parologio : public Usermod {
         uint8_t nowDots = nowMinutes % 5;
         if (nowMinutes > 4) {
           nowMinutes = (nowMinutes/5) -1; // 0 based value
+          Serial.printf("%u fration five minute \n", nowMinutes);
         }else{
-          nowMinutes = 0;
+          nowMinutes = -1;
+          Serial.printf("%u zero minute \n", nowMinutes);
         }
 
-        Serial.printf("Show: %u hour, %s minutes, %u dots \n", nowHour, minutiArray[nowMinutes], nowDots);
+        Serial.printf("Show: %u hour, %u minutes, %u dots \n", nowHour, nowMinutes, nowDots);
         displayTime(nowHour, nowMinutes, nowDots, usePast);
       }
-      // colorUpdated(CALL_MODE_FX_CHANGED);
     }
 };

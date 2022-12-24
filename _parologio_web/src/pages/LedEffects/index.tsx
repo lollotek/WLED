@@ -2,7 +2,6 @@ import { BackgroundColor } from "../../components/Icons/BackgroundColor";
 import { Bulb } from "../../components/Icons/Bulb";
 import { Effects } from "../../components/Icons/Effects";
 import { MainColor } from "../../components/Icons/MainColor";
-import { LinearSlider } from "../../components/LinearSlider";
 
 declare type Props = {
     value?: number
@@ -22,7 +21,7 @@ export function LedEffects({
         </h4>
         <div className="grid grid-cols-3 gap-4 text-sm my-4 w-full rounded-lg hover:shadow-md bg-slate-300">
           <label onClick={() => onChange(0)}>
-            <input className="sr-only peer" name="size" type="radio" value="Lett" checked={value === 0} />
+            <input className="sr-only peer" name="size" type="radio" value="solid" checked={value === 0} />
             <div className="w-28 h-28 rounded-lg flex items-center justify-center text-slate-700 peer-checked:font-semibold peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border peer-checked:border-black/20">
               <MainColor />
             </div>

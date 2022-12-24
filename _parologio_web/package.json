@@ -8,6 +8,8 @@
     "eslint": "eslint  \"./src/**/*.{html,tsx,ts}\" --ignore-pattern node_modules/"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.182",
+    "lodash": "^4.17.21",
     "preact": "^10.5.15",
     "react-use-websocket": "^3.0.0"
   },

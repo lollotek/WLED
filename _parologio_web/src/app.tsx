@@ -20,11 +20,12 @@ export function App() {
   const throttledHue = useThrottle(
     () => {
       const color = hslToRgb(hue, 1, .5)
+      const shiftcolor = hslToRgb(hue + .1, 1, .5)
       const colorbg = hslToRgb(huebg, 1, .3)
       console.log('sendConfig');
       sendConfig({"seg":[
         {"fx":0,"col":[colorbg]},
-        ...Array.from(wordSegments, () => ({fx:effect, sx:40, col:[color]}))
+        ...Array.from(wordSegments, () => ({fx:effect, col:[color, shiftcolor]}))
       ]})
     },
     300
