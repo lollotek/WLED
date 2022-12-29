@@ -392,4 +392,8 @@ void registerUsermods()
   #ifdef USERMOD_STAIRCASE_WIPE
   usermods.add(new StairwayWipeUsermod());
   #endif
+
+  #ifdef USERMOD_PAROLOGIO
+  usermods.add(new Parologio());
+  #endif
 }
