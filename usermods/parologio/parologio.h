@@ -9,8 +9,7 @@ fade 12
 #pragma once
 
 #include "wled.h"
-#define RELAY_PIN 12
-
+unsigned long clockCheck _INIT(0);
 class Parologio : public Usermod {
   private:
     int8_t minuteLast = 99;
@@ -97,7 +96,7 @@ class Parologio : public Usermod {
 
         setSegmentWord(pinOreArray[hour], oreArray[hour]);
 
-        Serial.printf("minute: %u minute \n", minute);
+        DEBUG_PRINTF("minute: %u minute \n", minute);
 
         if (past) {
           setSegmentWord(pinMeno, "meno");
@@ -137,33 +136,36 @@ class Parologio : public Usermod {
     }
 
     void loop() {
-      updateLocalTime();
-      nowHour = hour(localTime);
-      nowMinutes = minute(localTime);
-      if (nowMinutes != minuteLast && (nowHour != -1 && nowMinutes != -1))
-      {    
-        Serial.printf("Read: %u hour, %u minutes \n", nowHour, nowMinutes);
-        minuteLast = nowMinutes;  // save for next refresh
-        nowHour = nowHour % 12;  // nomalize hour to 0-12 instead 0-24
+      if (millis() - clockCheck > 4999) {
+        auto time = toki.getTime();
+        nowHour = hour(localTime);
+        nowMinutes = minute(localTime);
+        clockCheck = millis();
+        if (nowMinutes != minuteLast && (nowHour != -1 && nowMinutes != -1))
+        {
+          DEBUG_PRINTF("Read: %u hour, %u minutes \n", nowHour, nowMinutes);
+          minuteLast = nowMinutes;  // save for next refresh
+          nowHour = nowHour % 12;  // nomalize hour to 0-12 instead 0-24
 
-        bool usePast = false;
-        if (nowMinutes > 34){
-          nowMinutes = abs (nowMinutes - 60);
-          nowHour ++; // need to show new hour es 2:45 -> 3 past 15
-          usePast = true;
+          bool usePast = false;
+          if (nowMinutes > 34){
+            nowMinutes = abs (nowMinutes - 60);
+            nowHour ++; // need to show new hour es 2:45 -> 3 past 15
+            usePast = true;
+          }
+
+          uint8_t nowDots = nowMinutes % 5;
+          if (nowMinutes > 4) {
+            nowMinutes = (nowMinutes/5); // 1 based value
+            DEBUG_PRINTF("%u fration five minute \n", nowMinutes);
+          }else{
+            nowMinutes = 0;
+            DEBUG_PRINTF("%u zero minute \n", nowMinutes);
+          }
+
+          DEBUG_PRINTF("Show: %i hour, %i minutes, %u dots \n", nowHour, nowMinutes, nowDots, usePast);
+          displayTime(nowHour, nowMinutes, nowDots, usePast);
         }
-
-        uint8_t nowDots = nowMinutes % 5;
-        if (nowMinutes > 4) {
-          nowMinutes = (nowMinutes/5); // 1 based value
-          Serial.printf("%u fration five minute \n", nowMinutes);
-        }else{
-          nowMinutes = 0;
-          Serial.printf("%u zero minute \n", nowMinutes);
-        }
-
-        Serial.printf("Show: %i hour, %i minutes, %u dots \n", nowHour, nowMinutes, nowDots, usePast);
-        displayTime(nowHour, nowMinutes, nowDots, usePast);
       }
     }
 
