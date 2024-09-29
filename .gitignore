@@ -16,6 +16,8 @@ wled-update.sh
 
 /build_output/
 /node_modules/
+**/node_modules/
+**/dist/
 
 /wled00/extLibs
 /wled00/LittleFS
