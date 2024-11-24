@@ -30,8 +30,13 @@
 enable get time
 CET/CEST
 it.pool.ntp.org
+no 24h format
 
 ### configure pinout for RTC mod (should be preset)
 HW_PIN_SCL: 4
 HW_PIN_SDA: 5
 
+## configure leds
+114
+gpio16
+relè 19 invert

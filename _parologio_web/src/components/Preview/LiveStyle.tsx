@@ -3,7 +3,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 import { useThrottle } from "../../utils/api";
 
 export function LiveStyle(){
-  const [socketUrl] = useState(`ws://${import.meta.env.DEV ? '192.168.1.19' : window.location.hostname}/ws`);
+  const [socketUrl] = useState(`ws://${import.meta.env.DEV ? '4.3.2.1' : window.location.hostname}/ws`);
   const [liveColors, setLiveColors] = useState('');
 
   const {

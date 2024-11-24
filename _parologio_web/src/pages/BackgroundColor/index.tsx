@@ -17,7 +17,7 @@ export function BackgroundColor({
     onToggle
 }: Props) {
     return (
-        <div className="my-8 space-y-6">
+        <div className="my-8 space-y-3">
         {/* <p className="space-y-4 font-medium text-gray-800">Colore lettere</p> */}
         
         <div className="flex justify-between">

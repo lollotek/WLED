@@ -8,7 +8,12 @@ export default defineConfig({
 	server:{
 		proxy: {
 			// string shorthand
-			'/json': 'http://192.168.1.19/',
+			'/json': 'http://4.3.2.1/',
+			'/json/net': 'http://4.3.2.1/',
+			'/hue': 'http://4.3.2.1/',
+			'/settings': 'http://4.3.2.1/',
+			'/settings/wifi': 'http://4.3.2.1/',
+			'/settings/time': 'http://4.3.2.1/'
 			// WS is into socketUrl declaration
 		}
 	},

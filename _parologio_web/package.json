@@ -8,6 +8,8 @@
     "eslint": "eslint  \"./src/**/*.{html,tsx,ts}\" --ignore-pattern node_modules/"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.0",
+    "@heroicons/react": "^2.1.5",
     "@types/lodash": "^4.14.182",
     "lodash": "^4.17.21",
     "preact": "^10.5.15",
