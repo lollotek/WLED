@@ -49,6 +49,31 @@ export const sendHue = (value: number, showErr = false) => {
     })
 }
 
+export const sendBgToggle = (showErr = false) => {
+  return fetch(`/toggle_background`, {
+      method: 'GET',
+        })
+    .then(
+      (response) => {
+        if (response.status !== 200) {
+          console.log('Looks like there was a problem. Status Code: ' + response.status)
+          if (showErr) {
+            throw new Error(response.statusText)
+          }
+        } else {
+          return response.json()
+        }
+      }
+    )
+    .catch((err) => {
+      if (showErr) {
+        throw new Error(err)
+      }
+      console.log('Fetch Error :' , err)
+    })
+}
+
+
 export const sendConfig = (body: object, showErr = false) => {
   return fetch('/json', {
       method: 'POST',

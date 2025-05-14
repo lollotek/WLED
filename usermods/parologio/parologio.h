@@ -10,11 +10,15 @@ fade 12
 
 #include "wled.h"
 unsigned long clockCheck _INIT(0);
+bool displayBack     _INIT(false);
+
 class Parologio : public Usermod {
   private:
     int8_t minuteLast = 99;
     int8_t nowHour = -1;
     int8_t nowMinutes = -1;
+
+    void InitHtmlAPIHandle();
 
     #define maskMaxPixels 162
 
@@ -135,11 +139,23 @@ class Parologio : public Usermod {
         colorUpdated(CALL_MODE_FX_CHANGED);
     }
 
+    void connected() {
+      InitHtmlAPIHandle();
+    }
+
     void loop() {
       if (millis() - clockCheck > 4999) {
-        auto time = toki.getTime();
-        nowHour = hour(localTime);
-        nowMinutes = minute(localTime);
+        // auto time = toki.getTime();
+        time_t refTime = 0;
+        if (!WLED_CONNECTED) {
+          refTime = RTC.get();
+          DEBUG_PRINTF("RTC %u\n", refTime);
+        }else{
+          refTime = localTime;
+          DEBUG_PRINTF("NTP %u\n", refTime);
+        }
+        nowHour = hour(refTime);
+        nowMinutes = minute(refTime);
         clockCheck = millis();
         if (nowMinutes != minuteLast && (nowHour != -1 && nowMinutes != -1))
         {
@@ -182,9 +198,37 @@ class Parologio : public Usermod {
         // check mask
         if (maskLedsOn[x] == 0)
         {
-          // set pixel off
-          strip.setPixelColor(x, RGBW32(0,0,0,0));
+          if(displayBack) {
+            strip.setPixelColor(x, strip.getSegment(0).colors[1]);
+          }else{
+            // set pixel off
+            strip.setPixelColor(x, RGBW32(0,0,0,0));
+          }
         }
       }
     }
+
+    void addToConfig(JsonObject& root)
+    {
+      JsonObject top = root.createNestedObject(F("ParologioUsermod"));
+      top[F("displayBack")] = displayBack;
+    }
+
+    bool readFromConfig(JsonObject& root)
+    {
+      JsonObject top = root[F("ParologioUsermod")];
+      bool configComplete = !top.isNull();
+      configComplete &= getJsonValue(top[F("displayBack")], displayBack);
+      return configComplete;
+    }
+
 };
+
+void Parologio::InitHtmlAPIHandle() {
+  server.on(SET_F("/toggle_background"), HTTP_GET, [](AsyncWebServerRequest *request){
+    displayBack = !displayBack;
+    String response = (String)"{ \"displayBack\": " + displayBack + "}";
+    // Respond to the request
+    request->send(200, "application/json", response);
+  });
+}

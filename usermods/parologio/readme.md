@@ -10,31 +10,41 @@
 # Suggested platformio override (on ini file):
 
    [platformio]
-   default_envs = usermod_parologio
+   default_envs = usermod_parologio_32
 
-   [env:usermod_parologio]
-   extends = env:d1_mini
-   lib_deps = ${env.lib_deps}
+   [env:usermod_parologio_32]
+   extends = env:esp32dev
+   platform = ${esp32.platform}
+   platform_packages = ${esp32.platform_packages}
+   board_build.partitions = ${esp32.default_partitions}
+   ; board_build.filesystem = littlefs
+   ; board_build.partitions = tools/WLED_ESP32_4MB_1MB_FS.csv
    build_flags = 
-      ${common.build_flags_esp8266} 
-      -DUSERMOD_PAROLOGIO
-      -DSIZE_50X50=1
-      -DIS_STONE=1
-      -DUSERMOD_RTC
-      -DRLYPIN=12
-      -DRLYMDE=1
-      -I2CSCLPIN=4
-      -I2CSDAPIN=5
+      ${common.build_flags_esp32} 
+      -D WLED_RELEASE_NAME=ESP32
+      -D USERMOD_PAROLOGIO
+      -D SIZE_50X50
+      -D USERMOD_RTC
+      -D WLED_DISABLE_BLYNK
+      -D WLED_DISABLE_CRONIXIE
+      -D WLED_DISABLE_HUESYNC
+      -D WLED_DISABLE_INFRARED
+      -D RLYPIN=19
+      -D RLYMDE=1
+      -D I2CSDAPIN=21
+      -D I2CSCLPIN=22
+      -D WLED_DEBUG
 
 ### configure npt:
 enable get time
 CET/CEST
+UTC offset 3600
 it.pool.ntp.org
 no 24h format
 
 ### configure pinout for RTC mod (should be preset)
-HW_PIN_SCL: 4
-HW_PIN_SDA: 5
+HW_PIN_SDA: 21
+HW_PIN_SCL: 22
 
 ## configure leds
 114

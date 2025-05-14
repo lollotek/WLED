@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
 import { hslToRgb } from './components/LinearSlider/helpers/colorHelpers';
-import { scaleBetween } from './components/LinearSlider/helpers/eventHelpers';
 import { Preview } from './components/Preview/Preview';
 import { SectionSelector } from './components/SectionSelector';
 import { BackgroundColor } from './pages/BackgroundColor';
@@ -9,7 +8,7 @@ import { LedEffects } from './pages/LedEffects';
 import { WordsColor } from './pages/WordsColor';
 import { WifiSettings } from './pages/WifiSettings';
 import { TimeSettings } from './pages/TimeSettings';
-import { sendConfig, sendHue, sendLightness, useThrottle } from './utils/api';
+import { sendBgToggle, sendConfig, sendHue, sendLightness, useThrottle } from './utils/api';
 
 export function App() {
   const [section, setSection] = useState('Lett');
@@ -36,7 +35,7 @@ export function App() {
       const colorbg = hslToRgb(huebg, 1, .3)
       console.log('sendConfig');
       sendConfig({"seg":[
-        {"fx":effect,"col":[color]},
+        {"fx":effect,"col":[color, colorbg]},
       ]})
     },
     300
@@ -53,10 +52,15 @@ export function App() {
   useEffect(throttledBrightness, [brightness]);
 
   useEffect(() => {
-    sendConfig({"seg":[
-      {on:toggleBg}
-    ]})
+    sendBgToggle();
   }, [toggleBg] );
+
+
+  // useEffect(() => {
+  //   sendConfig({"seg":[
+  //     {on:toggleBg}
+  //   ]})
+  // }, [toggleBg] );
 
 
   // const throttledBrightness = useThrottle(
@@ -94,12 +98,11 @@ export function App() {
         <WordsColor value={hue} onChange={setHue}/>
         <LedBrightness value={brightness} onChange={setBrightness}/>
       </>}
-      {/* {section ==='Sfon' && <BackgroundColor value={huebg} onChange={setHueBg} enabled={toggleBg} onToggle={setToggleBg}/>} */}
+      {section ==='Sfon' && <BackgroundColor value={huebg} onChange={setHueBg} enabled={toggleBg} onToggle={setToggleBg}/>}
       {/* {section ==='Lum' && <LedBrightness value={brightness} onChange={setBrightness}/>} */}
       {section ==='Effet' && <LedEffects value={effect} onChange={setEffect}/>}
       {section ==='Time' && <TimeSettings />}
       {section ==='Wifi' && <WifiSettings />}
-
     </div>
   )
 }
