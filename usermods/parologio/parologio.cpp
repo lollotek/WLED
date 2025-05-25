@@ -6,14 +6,16 @@ Blink Rainbow 26
 Running 15
 fade 12
 */
-#pragma once
 
+#include "src/dependencies/time/DS1307RTC.h"
 #include "wled.h"
 unsigned long clockCheck _INIT(0);
 bool displayBack     _INIT(false);
 
 class ParologioUsermod : public Usermod {
   private:
+    unsigned long lastTime = 0;
+    bool disabledRTC = false;
     int8_t minuteLast = 99;
     int8_t nowHour = -1;
     int8_t nowMinutes = -1;
@@ -134,10 +136,20 @@ class ParologioUsermod : public Usermod {
 
   public:
     void setup() {
-        Serial.println("Init Parologio Usermod");
-        strip.getSegment(0).setOption(SEG_OPTION_ON, true);
-        strip.getSegment(0).setOption(SEG_OPTION_SELECTED, true);
-        colorUpdated(CALL_MODE_FX_CHANGED);
+      if (i2c_scl<0 || i2c_sda<0) { disabledRTC = true; return; }
+        RTC.begin();
+        time_t rtcTime = RTC.get();
+      if (rtcTime) {
+        toki.setTime(rtcTime,TOKI_NO_MS_ACCURACY,TOKI_TS_RTC);
+        updateLocalTime();
+      } else {
+        if (!RTC.chipPresent()) disabledRTC = true; //don't waste time if H/W error
+      }
+
+      DEBUG_PRINTF("Init Parologio Usermod\n");
+      strip.getSegment(0).setOption(SEG_OPTION_ON, true);
+      strip.getSegment(0).setOption(SEG_OPTION_SELECTED, true);
+      colorUpdated(CALL_MODE_FX_CHANGED);
     }
 
     void connected() {
@@ -145,13 +157,17 @@ class ParologioUsermod : public Usermod {
     }
 
     void loop() {
+      if (strip.isUpdating()) return;
+      if (toki.isTick() && !disabledRTC) {
+        time_t t = toki.second();
+        if (t != RTC.get()) RTC.set(t); //set RTC to NTP/UI-provided value
+      }
       if (millis() - clockCheck > 4999) {
-        Serial.println("Parologio clock");
         // auto time = toki.getTime();
         time_t refTime = 0;
-        if (!WLED_CONNECTED) {
-          // refTime = RTC.get();
-          // DEBUG_PRINTF("RTC %u\n", refTime);
+        if (!WLED_CONNECTED && !disabledRTC) {
+          refTime = RTC.get();
+          DEBUG_PRINTF("RTC %u\n", refTime);
         }else{
           refTime = localTime;
           DEBUG_PRINTF("NTP %u\n", refTime);
@@ -159,6 +175,7 @@ class ParologioUsermod : public Usermod {
         nowHour = hour(refTime);
         nowMinutes = minute(refTime);
         clockCheck = millis();
+        
         if (nowMinutes != minuteLast && (nowHour != -1 && nowMinutes != -1))
         {
           DEBUG_PRINTF("Read: %u hour, %u minutes \n", nowHour, nowMinutes);
