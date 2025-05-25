@@ -20,8 +20,8 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
   if (subPage == SUBPAGE_WIFI)
   {
     strlcpy(clientSSID,request->arg(F("CS")).c_str(), 33);
-
     if (!isAsterisksOnly(request->arg(F("CP")).c_str(), 65)) strlcpy(clientPass, request->arg(F("CP")).c_str(), 65);
+    DEBUG_PRINTF("WIFI U:%s P:%s", clientSSID, clientPass);
 
     strlcpy(cmDNS, request->arg(F("CM")).c_str(), 33);
 

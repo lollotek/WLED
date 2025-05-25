@@ -12,7 +12,7 @@ export default defineConfig({
 			// WS is into socketUrl declaration
 		}
 	},
-  	plugins: [preact(), viteSingleFile(),viteCompression()],
+	plugins: [preact(), viteSingleFile(),viteCompression()],
 	build: {
 		target: "esnext",
 		assetsInlineLimit: 100000000,

@@ -18,6 +18,8 @@ class Parologio : public Usermod {
 
     #define maskMaxPixels 162
 
+    bool enableBackground = false;
+
     #ifdef SIZE_50X50
       char const * oreArray[13] = {"dodici","una","due","tre","quattro","cinque","sei","sette","otto","nove","dieci","undici","dodici"};
       char const * minutiArray[6] = {"cinque","dieci","quarto","venti","venticinque","mezza"};
@@ -128,6 +130,39 @@ class Parologio : public Usermod {
         #endif
     }
 
+    /* DEBUG */
+    void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
+        Serial.printf("Listing directory: %s\r\n", dirname);
+
+        File root = fs.open(dirname);
+        if(!root){
+            Serial.println("- failed to open directory");
+            return;
+        }
+        if(!root.isDirectory()){
+            Serial.println(" - not a directory");
+            return;
+        }
+
+        File file = root.openNextFile();
+        while(file){
+            if(file.isDirectory()){
+                Serial.print("  DIR : ");
+                Serial.println(file.name());
+                if(levels){
+                    listDir(fs, file.name(), levels -1);
+                }
+            } else {
+                Serial.print("  FILE: ");
+                Serial.print(file.name());
+                Serial.print("\tSIZE: ");
+                Serial.println(file.size());
+            }
+            file = root.openNextFile();
+        }
+    }
+    /* END DEBUG */
+
   public:
     void setup() {
         strip.getSegment(0).setOption(SEG_OPTION_ON, true);
@@ -180,11 +215,32 @@ class Parologio : public Usermod {
       for (int x = 0; x <= maskMaxPixels; x++)
       {
         // check mask
-        if (maskLedsOn[x] == 0)
+        if (maskLedsOn[x] == 0 && enableBackground == 0)
         {
           // set pixel off
           strip.setPixelColor(x, RGBW32(0,0,0,0));
         }
+        if (maskLedsOn[x] == 1 && enableBackground == 1)
+        {
+          // set pixel off
+          strip.setPixelColor(x, RGBW32(255, 255, 255, 0));
+        }
       }
+    }
+
+    void addToConfig(JsonObject& root)
+    {
+      JsonObject top = root.createNestedObject("Parologio");
+      top["enableBackground"] = enableBackground;
+    }
+
+    bool readFromConfig(JsonObject& root)
+    {
+      JsonObject top = root["Parologio"];
+
+      bool configComplete = !top.isNull();
+      configComplete &= getJsonValue(top["enableBackground"], enableBackground, false);
+
+      return configComplete;
     }
 };

@@ -1,5 +1,18 @@
 #include "wled.h"
+
+#include "html_ui.h"
+#ifdef WLED_ENABLE_SIMPLE_UI
+  #include "html_simple.h"
+#endif
+#include "html_settings.h"
 #include "html_other.h"
+#ifdef WLED_ENABLE_PIXART
+  #include "html_pixart.h"
+#endif
+#ifndef WLED_DISABLE_PXMAGIC
+  #include "html_pxmagic.h"
+#endif
+#include "html_cpal.h"
 
 /*
  * Integrated HTTP web server page declarations
@@ -25,7 +38,38 @@ bool isIp(String str) {
   return true;
 }
 
-// KILLME SOON
+void handleUpload(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
+  if (!correctPIN) {
+    if (final) request->send(401, "text/plain", FPSTR(s_unlock_cfg));
+    return;
+  }
+  if (!index) {
+    String finalname = filename;
+    if (finalname.charAt(0) != '/') {
+      finalname = '/' + finalname; // prepend slash if missing
+    }
+
+    request->_tempFile = WLED_FS.open(finalname, "w");
+    DEBUG_PRINT(F("Uploading "));
+    DEBUG_PRINTLN(finalname);
+    if (finalname.equals("/presets.json")) presetsModifiedTime = toki.second();
+  }
+  if (len) {
+    request->_tempFile.write(data,len);
+  }
+  if (final) {
+    request->_tempFile.close();
+    if (filename.indexOf(F("cfg.json")) >= 0) { // check for filename with or without slash
+      doReboot = true;
+      request->send(200, "text/plain", F("Configuration restore successful.\nRebooting..."));
+    } else {
+      if (filename.indexOf(F("palette")) >= 0 && filename.indexOf(F(".json")) >= 0) strip.loadCustomPalettes();
+      request->send(200, "text/plain", F("File Uploaded!"));
+    }
+    cacheInvalidate++;
+  }
+}
+
 void createEditHandler(bool enable) {
   if (editHandler != nullptr) server.removeHandler(editHandler);
   if (enable) {
@@ -71,53 +115,57 @@ void initServer()
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Methods"), "*");
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Headers"), "*");
 
-// #ifdef WLED_ENABLE_WEBSOCKETS
-//   #ifndef WLED_DISABLE_2D
-//   server.on(SET_F("/liveview2D"), HTTP_GET, [](AsyncWebServerRequest *request){
-//     if (handleIfNoneMatchCacheHeader(request)) return;
-//     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", PAGE_liveviewws2D, PAGE_liveviewws2D_length);
-//     response->addHeader(FPSTR(s_content_enc),"gzip");
-//     setStaticContentCacheHeaders(response);
-//     request->send(response);
-//   });
-//   #endif
-// #endif
-  // server.on(SET_F("/liveview"), HTTP_GET, [](AsyncWebServerRequest *request){
-  //   if (handleIfNoneMatchCacheHeader(request)) return;
-  //   AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", PAGE_liveview, PAGE_liveview_length);
-  //   response->addHeader(FPSTR(s_content_enc),"gzip");
-  //   setStaticContentCacheHeaders(response);
-  //   request->send(response);
-  // });
+#ifdef WLED_ENABLE_WEBSOCKETS
+  #ifndef WLED_DISABLE_2D
+  server.on(SET_F("/liveview2D"), HTTP_GET, [](AsyncWebServerRequest *request){
+    if (handleIfNoneMatchCacheHeader(request)) return;
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", PAGE_liveviewws2D, PAGE_liveviewws2D_length);
+    response->addHeader(FPSTR(s_content_enc),"gzip");
+    setStaticContentCacheHeaders(response);
+    request->send(response);
+  });
+  #endif
+#endif
+  server.on(SET_F("/liveview"), HTTP_GET, [](AsyncWebServerRequest *request){
+    if (handleIfNoneMatchCacheHeader(request)) return;
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", PAGE_liveview, PAGE_liveview_length);
+    response->addHeader(FPSTR(s_content_enc),"gzip");
+    setStaticContentCacheHeaders(response);
+    request->send(response);
+  });
 
-  // server.on(SET_F("/style.css"), HTTP_GET, [](AsyncWebServerRequest *request){
-  //   if (handleIfNoneMatchCacheHeader(request)) return;
-  //   AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", PAGE_settingsCss, PAGE_settingsCss_length);
-  //   response->addHeader(FPSTR(s_content_enc),"gzip");
-  //   setStaticContentCacheHeaders(response);
-  //   request->send(response);
-  // });
+  //settings page
+  server.on(SET_F("/settings"), HTTP_GET, [](AsyncWebServerRequest *request){
+    serveSettings(request);
+  });
 
-  // server.on(SET_F("/favicon.ico"), HTTP_GET, [](AsyncWebServerRequest *request){
-  //   if(!handleFileRead(request, "/favicon.ico"))
-  //   {
-  //     request->send_P(200, "image/x-icon", favicon, 156);
-  //   }
-  // });
+  // "/settings/settings.js&p=x" request also handled by serveSettings()
 
-  server.serveStatic("/", WLED_FS, "/");
+  server.on(SET_F("/style.css"), HTTP_GET, [](AsyncWebServerRequest *request){
+    if (handleIfNoneMatchCacheHeader(request)) return;
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", PAGE_settingsCss, PAGE_settingsCss_length);
+    response->addHeader(FPSTR(s_content_enc),"gzip");
+    setStaticContentCacheHeaders(response);
+    request->send(response);
+  });
 
-  // server.on(SET_F("/welcome"), HTTP_GET, [](AsyncWebServerRequest *request){
-  //   serveSettings(request);
-  // });
+  server.on(SET_F("/favicon.ico"), HTTP_GET, [](AsyncWebServerRequest *request){
+    if(!handleFileRead(request, "/favicon.ico"))
+    {
+      request->send_P(200, "image/x-icon", favicon, 156);
+    }
+  });
 
-  // server.on(SET_F("/reset"), HTTP_GET, [](AsyncWebServerRequest *request){
-  //   serveMessage(request, 200,F("Rebooting now..."),F("Please wait ~10 seconds..."),129);
-  //   doReboot = true;
-  // });
+  server.on(SET_F("/welcome"), HTTP_GET, [](AsyncWebServerRequest *request){
+    serveSettings(request);
+  });
+
+  server.on(SET_F("/reset"), HTTP_GET, [](AsyncWebServerRequest *request){
+    serveMessage(request, 200,F("Rebooting now..."),F("Please wait ~10 seconds..."),129);
+    doReboot = true;
+  });
 
   server.on(SET_F("/settings"), HTTP_POST, [](AsyncWebServerRequest *request){
-    DEBUG_PRINTLN(F("/settings HTTP_POST"));
     serveSettings(request, true);
   });
 
@@ -125,7 +173,6 @@ void initServer()
     serveJson(request);
   });
 
-// JSON API MANAGER
   AsyncCallbackJsonWebHandler* handler = new AsyncCallbackJsonWebHandler(F("/json"), [](AsyncWebServerRequest *request) {
     bool verboseResponse = false;
     bool isConfig = false;
@@ -201,6 +248,11 @@ void initServer()
     serveMessage(request, 418, F("418. I'm a teapot."), F("(Tangible Embedded Advanced Project Of Twinkling)"), 254);
   });
 
+  server.on(SET_F("/upload"), HTTP_POST, [](AsyncWebServerRequest *request) {},
+        [](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data,
+                      size_t len, bool final) {handleUpload(request, filename, index, data, len, final);}
+  );
+
 #ifdef WLED_ENABLE_SIMPLE_UI
   server.on(SET_F("/simple.htm"), HTTP_GET, [](AsyncWebServerRequest *request){
     if (handleFileRead(request, "/simple.htm")) return;
@@ -212,6 +264,22 @@ void initServer()
   });
 #endif
 
+  server.on(SET_F("/iro.js"), HTTP_GET, [](AsyncWebServerRequest *request){
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", iroJs, iroJs_length);
+    response->addHeader(FPSTR(s_content_enc),"gzip");
+    setStaticContentCacheHeaders(response);
+    request->send(response);
+  });
+
+  server.on(SET_F("/rangetouch.js"), HTTP_GET, [](AsyncWebServerRequest *request){
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", rangetouchJs, rangetouchJs_length);
+    response->addHeader(FPSTR(s_content_enc),"gzip");
+    setStaticContentCacheHeaders(response);
+    request->send(response);
+  });
+
+  createEditHandler(correctPIN);
+
 #ifndef WLED_DISABLE_OTA
   //init ota page
   server.on(SET_F("/update"), HTTP_GET, [](AsyncWebServerRequest *request){
@@ -222,7 +290,6 @@ void initServer()
   });
 
   server.on(SET_F("/update"), HTTP_POST, [](AsyncWebServerRequest *request){
-    DEBUG_PRINTLN(F("/update HTTP_POST"));
     if (!correctPIN) {
       serveSettings(request, true); // handle PIN page POST request
       return;
@@ -284,6 +351,37 @@ void initServer()
     } else {
       serveSettings(request);
     }
+  });
+
+  #ifdef WLED_ENABLE_PIXART
+  server.on(SET_F("/pixart.htm"), HTTP_GET, [](AsyncWebServerRequest *request){
+    if (handleFileRead(request, F("/pixart.htm"))) return;
+    if (handleIfNoneMatchCacheHeader(request)) return;
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", PAGE_pixart, PAGE_pixart_L);
+    response->addHeader(FPSTR(s_content_enc),"gzip");
+    setStaticContentCacheHeaders(response);
+    request->send(response);
+  });
+  #endif
+
+  #ifndef WLED_DISABLE_PXMAGIC
+  server.on(SET_F("/pxmagic.htm"), HTTP_GET, [](AsyncWebServerRequest *request){
+    if (handleFileRead(request, F("/pxmagic.htm"))) return;
+    if (handleIfNoneMatchCacheHeader(request)) return;
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", PAGE_pxmagic, PAGE_pxmagic_L);
+    response->addHeader(FPSTR(s_content_enc),"gzip");
+    setStaticContentCacheHeaders(response);
+    request->send(response);
+  });
+  #endif
+
+  server.on(SET_F("/cpal.htm"), HTTP_GET, [](AsyncWebServerRequest *request){
+    if (handleFileRead(request, F("/cpal.htm"))) return;
+    if (handleIfNoneMatchCacheHeader(request)) return;
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", PAGE_cpal, PAGE_cpal_L);
+    response->addHeader(FPSTR(s_content_enc),"gzip");
+    setStaticContentCacheHeaders(response);
+    request->send(response);
   });
 
   #ifdef WLED_ENABLE_WEBSOCKETS
@@ -354,11 +452,11 @@ void serveIndex(AsyncWebServerRequest* request)
     response = request->beginResponse_P(200, "text/html", PAGE_simple, PAGE_simple_L);
   else
 #endif
-  //   response = request->beginResponse_P(200, "text/html", PAGE_index, PAGE_index_L);
+    response = request->beginResponse_P(200, "text/html", PAGE_index, PAGE_index_L);
 
-  // response->addHeader(FPSTR(s_content_enc),"gzip");
-  // setStaticContentCacheHeaders(response);
-  // request->send(response);
+  response->addHeader(FPSTR(s_content_enc),"gzip");
+  setStaticContentCacheHeaders(response);
+  request->send(response);
 }
 
 
@@ -523,30 +621,36 @@ void serveSettings(AsyncWebServerRequest* request, bool post)
     }
   }
 
-//   AsyncWebServerResponse *response;
-//   switch (subPage)
-//   {
-//     case SUBPAGE_WIFI    : response = request->beginResponse_P(200, "text/html", PAGE_settings_wifi, PAGE_settings_wifi_length); break;
-//     case SUBPAGE_LEDS    : response = request->beginResponse_P(200, "text/html", PAGE_settings_leds, PAGE_settings_leds_length); break;
-//     case SUBPAGE_UI      : response = request->beginResponse_P(200, "text/html", PAGE_settings_ui,   PAGE_settings_ui_length);   break;
-//     case SUBPAGE_SYNC    : response = request->beginResponse_P(200, "text/html", PAGE_settings_sync, PAGE_settings_sync_length); break;
-//     case SUBPAGE_TIME    : response = request->beginResponse_P(200, "text/html", PAGE_settings_time, PAGE_settings_time_length); break;
-//     case SUBPAGE_SEC     : response = request->beginResponse_P(200, "text/html", PAGE_settings_sec,  PAGE_settings_sec_length);  break;
-// #ifdef WLED_ENABLE_DMX
-//     case SUBPAGE_DMX     : response = request->beginResponse_P(200, "text/html", PAGE_settings_dmx,  PAGE_settings_dmx_length);  break;
-// #endif
-//     case SUBPAGE_UM      : response = request->beginResponse_P(200, "text/html", PAGE_settings_um,   PAGE_settings_um_length);   break;
-//     case SUBPAGE_UPDATE  : response = request->beginResponse_P(200, "text/html", PAGE_update,        PAGE_update_length);        break;
-// #ifndef WLED_DISABLE_2D
-//     case SUBPAGE_2D      : response = request->beginResponse_P(200, "text/html", PAGE_settings_2D,   PAGE_settings_2D_length);   break;
-// #endif
-//     case SUBPAGE_PINREQ  : response = request->beginResponse_P(401, "text/html", PAGE_settings_pin,  PAGE_settings_pin_length);  break;
-//     case SUBPAGE_CSS     : response = request->beginResponse_P(200, "text/css",  PAGE_settingsCss,   PAGE_settingsCss_length);   break;
-//     case SUBPAGE_JS      : serveSettingsJS(request); return;
-//     case SUBPAGE_WELCOME : response = request->beginResponse_P(200, "text/html", PAGE_welcome,       PAGE_welcome_length);       break;
-//     default:  response = request->beginResponse_P(200, "text/html", PAGE_settings,      PAGE_settings_length);      break;
-//   }
-//   response->addHeader(FPSTR(s_content_enc),"gzip");
-//   setStaticContentCacheHeaders(response);
-//   request->send(response);
+  AsyncWebServerResponse *response;
+  switch (subPage)
+  {
+    case SUBPAGE_WIFI    : response = request->beginResponse_P(200, "text/html", PAGE_settings_wifi, PAGE_settings_wifi_length); break;
+    case SUBPAGE_LEDS    : response = request->beginResponse_P(200, "text/html", PAGE_settings_leds, PAGE_settings_leds_length); break;
+    case SUBPAGE_UI      : response = request->beginResponse_P(200, "text/html", PAGE_settings_ui,   PAGE_settings_ui_length);   break;
+    case SUBPAGE_SYNC    : response = request->beginResponse_P(200, "text/html", PAGE_settings_sync, PAGE_settings_sync_length); break;
+    case SUBPAGE_TIME    : response = request->beginResponse_P(200, "text/html", PAGE_settings_time, PAGE_settings_time_length); break;
+    case SUBPAGE_SEC     : response = request->beginResponse_P(200, "text/html", PAGE_settings_sec,  PAGE_settings_sec_length);  break;
+#ifdef WLED_ENABLE_DMX
+    case SUBPAGE_DMX     : response = request->beginResponse_P(200, "text/html", PAGE_settings_dmx,  PAGE_settings_dmx_length);  break;
+#endif
+    case SUBPAGE_UM      : response = request->beginResponse_P(200, "text/html", PAGE_settings_um,   PAGE_settings_um_length);   break;
+    case SUBPAGE_UPDATE  : response = request->beginResponse_P(200, "text/html", PAGE_update,        PAGE_update_length);        break;
+#ifndef WLED_DISABLE_2D
+    case SUBPAGE_2D      : response = request->beginResponse_P(200, "text/html", PAGE_settings_2D,   PAGE_settings_2D_length);   break;
+#endif
+    case SUBPAGE_LOCK    : {
+      correctPIN = !strlen(settingsPIN); // lock if a pin is set
+      createEditHandler(correctPIN);
+      serveMessage(request, 200, strlen(settingsPIN) > 0 ? PSTR("Settings locked") : PSTR("No PIN set"), FPSTR(s_redirecting), 1);
+      return;
+    }
+    case SUBPAGE_PINREQ  : response = request->beginResponse_P(401, "text/html", PAGE_settings_pin,  PAGE_settings_pin_length);  break;
+    case SUBPAGE_CSS     : response = request->beginResponse_P(200, "text/css",  PAGE_settingsCss,   PAGE_settingsCss_length);   break;
+    case SUBPAGE_JS      : serveSettingsJS(request); return;
+    case SUBPAGE_WELCOME : response = request->beginResponse_P(200, "text/html", PAGE_welcome,       PAGE_welcome_length);       break;
+    default:  response = request->beginResponse_P(200, "text/html", PAGE_settings,      PAGE_settings_length);      break;
+  }
+  response->addHeader(FPSTR(s_content_enc),"gzip");
+  setStaticContentCacheHeaders(response);
+  request->send(response);
 }

@@ -6,6 +6,7 @@
 ## 💡 promemoria
 - Update platformio using 'pio upgrade'
 - Ini config for parologio are under platformio_override
+- per wsl usare sudo apt-get install python3-venv
 
 # Suggested platformio override (on ini file):
 
@@ -35,3 +36,7 @@ it.pool.ntp.org
 HW_PIN_SCL: 4
 HW_PIN_SDA: 5
 
+# win wsl2
+- install https://github.com/dorssel/usbipd-win/releases
+- install sudo apt-get install python3-venv
+- install https://marketplace.visualstudio.com/items?itemName=thecreativedodo.usbip-connect

@@ -10,12 +10,13 @@
 .vscode
 
 esp01-update.sh
-platformio_override.ini
 replace_fs.py
 wled-update.sh
 
 /build_output/
 /node_modules/
+/_parologio_web/node_modules/
+/_parologio_web/dist/
 
 /wled00/extLibs
 /wled00/LittleFS

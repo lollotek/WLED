@@ -1,0 +1,326 @@
+{
+  "ap": {
+    "behav": 0,
+    "chan": 1,
+    "hide": 0,
+    "ip": [
+      4,
+      3,
+      2,
+      1
+    ],
+    "pskl": 8,
+    "ssid": "WLED-cfg-PRELOADED"
+  },
+  "def": {
+    "bri": 128,
+    "on": true,
+    "ps": 0
+  },
+  "hw": {
+    "baud": 1152,
+    "btn": {
+      "ins": [
+        {
+          "macros": [
+            0,
+            0,
+            0
+          ],
+          "pin": [
+            0
+          ],
+          "type": 2
+        },
+        {
+          "macros": [
+            0,
+            0,
+            0
+          ],
+          "pin": [
+            -1
+          ],
+          "type": 0
+        },
+        {
+          "macros": [
+            0,
+            0,
+            0
+          ],
+          "pin": [
+            -1
+          ],
+          "type": 0
+        },
+        {
+          "macros": [
+            0,
+            0,
+            0
+          ],
+          "pin": [
+            -1
+          ],
+          "type": 0
+        }
+      ],
+      "max": 4,
+      "mqtt": false,
+      "pull": true,
+      "tt": 32
+    },
+    "com": [],
+    "if": {
+      "i2c-pin": [
+        21,
+        22
+      ],
+      "spi-pin": [
+        -1,
+        -1,
+        -1
+      ]
+    },
+    "ir": {
+      "pin": -1,
+      "sel": true,
+      "type": 0
+    },
+    "led": {
+      "cb": 0,
+      "cct": false,
+      "cr": false,
+      "fps": 42,
+      "ins": [
+        {
+          "freq": 0,
+          "len": 114,
+          "order": 0,
+          "pin": [
+            16
+          ],
+          "ref": false,
+          "rev": false,
+          "rgbwm": 0,
+          "skip": 0,
+          "start": 0,
+          "type": 22
+        }
+      ],
+      "ld": true,
+      "ledma": 55,
+      "maxpwr": 850,
+      "rgbwm": 255,
+      "total": 114
+    },
+    "relay": {
+      "pin": 19,
+      "rev": false
+    }
+  },
+  "id": {
+    "inv": "Light",
+    "mdns": "wled-c5007c",
+    "name": "WLED"
+  },
+  "if": {
+    "hue": {
+      "en": false,
+      "id": 1,
+      "ip": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "iv": 25,
+      "recv": {
+        "bri": true,
+        "col": true,
+        "on": true
+      }
+    },
+    "live": {
+      "dmx": {
+        "addr": 1,
+        "dss": 0,
+        "e131prio": 0,
+        "mode": 4,
+        "seqskip": false,
+        "uni": 1
+      },
+      "en": true,
+      "maxbri": false,
+      "mc": false,
+      "mso": false,
+      "no-gc": true,
+      "offset": 0,
+      "port": 5568,
+      "timeout": 25
+    },
+    "mqtt": {
+      "broker": "",
+      "cid": "WLED-c5007c",
+      "en": false,
+      "port": 1883,
+      "pskl": 0,
+      "rtn": false,
+      "topics": {
+        "device": "wled/c5007c",
+        "group": "wled/all"
+      },
+      "user": ""
+    },
+    "nodes": {
+      "bcast": true,
+      "list": true
+    },
+    "ntp": {
+      "ampm": true,
+      "en": true,
+      "host": "pool.ntp.org",
+      "ln": 0,
+      "lt": 0,
+      "offset": 0,
+      "tz": 2
+    },
+    "sync": {
+      "port0": 21324,
+      "port1": 65506,
+      "recv": {
+        "bri": true,
+        "col": true,
+        "fx": true,
+        "grp": 1,
+        "sb": false,
+        "seg": false
+      },
+      "send": {
+        "btn": false,
+        "dir": false,
+        "grp": 1,
+        "hue": true,
+        "macro": false,
+        "ret": 0,
+        "va": false
+      }
+    },
+    "va": {
+      "alexa": false,
+      "macros": [
+        0,
+        0
+      ],
+      "p": 0
+    }
+  },
+  "light": {
+    "aseg": false,
+    "gc": {
+      "bri": 1,
+      "col": 2.8,
+      "val": 2.8
+    },
+    "nl": {
+      "dur": 60,
+      "macro": 0,
+      "mode": 1,
+      "tbri": 0
+    },
+    "pal-mode": 0,
+    "scale-bri": 100,
+    "tr": {
+      "dur": 7,
+      "fx": true,
+      "mode": true,
+      "pal": 0,
+      "rpc": 5
+    }
+  },
+  "nw": {
+    "ins": [
+      {
+        "gw": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "ip": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pskl": 0,
+        "sn": [
+          255,
+          255,
+          255,
+          0
+        ],
+        "ssid": "Your_Network"
+      }
+    ]
+  },
+  "ol": {
+    "clock": 0,
+    "cntdwn": false,
+    "max": 29,
+    "min": 0,
+    "o12pix": 0,
+    "o5m": false,
+    "osec": false
+  },
+  "ota": {
+    "aota": true,
+    "lock": false,
+    "lock-wifi": false,
+    "pskl": 7
+  },
+  "remote": {
+    "linked_remote": "",
+    "remote_enabled": false
+  },
+  "rev": [
+    1,
+    0
+  ],
+  "timers": {
+    "cntdwn": {
+      "goal": [
+        24,
+        4,
+        1,
+        22,
+        12,
+        0
+      ],
+      "macro": 0
+    },
+    "ins": [
+      {
+        "dow": 127,
+        "en": 1,
+        "hour": 255,
+        "macro": 0,
+        "min": 0
+      },
+      {
+        "dow": 127,
+        "en": 1,
+        "hour": 255,
+        "macro": 0,
+        "min": 0
+      }
+    ]
+  },
+  "um": {},
+  "vid": 2403170,
+  "wifi": {
+    "phy": false,
+    "sleep": false
+  }
+}
