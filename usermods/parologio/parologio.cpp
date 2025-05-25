@@ -12,7 +12,7 @@ fade 12
 unsigned long clockCheck _INIT(0);
 bool displayBack     _INIT(false);
 
-class Parologio : public Usermod {
+class ParologioUsermod : public Usermod {
   private:
     int8_t minuteLast = 99;
     int8_t nowHour = -1;
@@ -134,6 +134,7 @@ class Parologio : public Usermod {
 
   public:
     void setup() {
+        Serial.println("Init Parologio Usermod");
         strip.getSegment(0).setOption(SEG_OPTION_ON, true);
         strip.getSegment(0).setOption(SEG_OPTION_SELECTED, true);
         colorUpdated(CALL_MODE_FX_CHANGED);
@@ -145,11 +146,12 @@ class Parologio : public Usermod {
 
     void loop() {
       if (millis() - clockCheck > 4999) {
+        Serial.println("Parologio clock");
         // auto time = toki.getTime();
         time_t refTime = 0;
         if (!WLED_CONNECTED) {
-          refTime = RTC.get();
-          DEBUG_PRINTF("RTC %u\n", refTime);
+          // refTime = RTC.get();
+          // DEBUG_PRINTF("RTC %u\n", refTime);
         }else{
           refTime = localTime;
           DEBUG_PRINTF("NTP %u\n", refTime);
@@ -224,7 +226,7 @@ class Parologio : public Usermod {
 
 };
 
-void Parologio::InitHtmlAPIHandle() {
+void ParologioUsermod::InitHtmlAPIHandle() {
   server.on(SET_F("/toggle_background"), HTTP_GET, [](AsyncWebServerRequest *request){
     displayBack = !displayBack;
     String response = (String)"{ \"displayBack\": " + displayBack + "}";
@@ -232,3 +234,6 @@ void Parologio::InitHtmlAPIHandle() {
     request->send(200, "application/json", response);
   });
 }
+
+static ParologioUsermod parologio;
+REGISTER_USERMOD(parologio);
