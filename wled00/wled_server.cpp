@@ -241,7 +241,7 @@ void initServer()
   server.on(_common_js, HTTP_GET, [](AsyncWebServerRequest *request) {
     handleStaticContent(request, FPSTR(_common_js), 200, FPSTR(CONTENT_TYPE_JAVASCRIPT), JS_common, JS_common_length);
   });
-
+/*
   //settings page
   server.on(F("/settings"), HTTP_GET, [](AsyncWebServerRequest *request){
     serveSettings(request);
@@ -277,6 +277,8 @@ void initServer()
   server.on(F("/settings"), HTTP_POST, [](AsyncWebServerRequest *request){
     serveSettings(request, true);
   });
+*/
+  server.serveStatic("/", WLED_FS, "/");
 
   const static char _json[] PROGMEM = "/json";
   server.on(FPSTR(_json), HTTP_GET, [](AsyncWebServerRequest *request){
@@ -436,6 +438,7 @@ void initServer()
   });
 #endif
 
+/*
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (captivePortal(request)) return;
     if (!showWelcomePage || request->hasArg(F("sliders"))) {
@@ -444,6 +447,7 @@ void initServer()
       serveSettings(request);
     }
   });
+*/
 
 #ifdef WLED_ENABLE_PIXART
   static const char _pixart_htm[] PROGMEM = "/pixart.htm";
